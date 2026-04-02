@@ -1,18 +1,25 @@
-# Streamlit for the app
+
+# Essential for Python build tools
+setuptools>=67.0.0
+wheel
+
+# Streamlit & UI
 streamlit==1.26.0
+rich==14.3.3
+markdown-it-py==4.0.0
+mdurl==0.1.2
+pygments==2.20.0
 
-# Stable numpy for Python 3.10
+# Scientific / ML
 numpy==1.23.5
-
-# TensorFlow compatible with Python 3.10
+pandas==2.1.0
+scikit-learn==1.3.0
+matplotlib==3.7.2
 tensorflow==2.13.0
 
-# Other common dependencies
-pandas==2.1.0
-matplotlib==3.7.2
-scikit-learn==1.3.0
-Pillow==10.1.0
+# Image handling
+Pillow==9.5.0
 opencv-python-headless==4.8.1.78
 
-# Optional but useful for file handling or web requests
+# HTTP requests
 requests==2.31.0
