@@ -1,42 +1,36 @@
 import streamlit as st
-import pickle
-import os
-import numpy as np
 import pandas as pd
+import numpy as np
+import joblib
+from sklearn.preprocessing import StandardScaler
 
-# -------------------------
-# Load your pickle model
-# -------------------------
-MODEL_PATH = "model.pkl"  # make sure your model file is in the repo root
+# ---- App title ----
+st.title("My ML Model Deployment App")
 
-if os.path.exists(MODEL_PATH):
-    with open(MODEL_PATH, "rb") as f:
-        model = pickle.load(f)
-    st.success("Model loaded successfully ✅")
-else:
-    st.error(f"Model file not found at {MODEL_PATH} ❌")
-    st.stop()  # Stop execution if model is missing
-
-# -------------------------
-# Example prediction
-# -------------------------
-def predict(input_data):
-    # Make sure input_data is in the same format your model expects
-    input_array = np.array([input_data])
-    prediction = model.predict(input_array)
-    return prediction
-
-# -------------------------
-# Streamlit UI
-# -------------------------
-st.title("My ML App")
-user_input = st.text_input("Enter input values separated by commas", "0,0,0")
-
-if st.button("Predict"):
+# ---- Load model safely ----
+@st.cache_resource
+def load_model():
     try:
-        # Convert input string to list of floats
-        input_list = [float(x.strip()) for x in user_input.split(",")]
-        result = predict(input_list)
-        st.write(f"Prediction: {result}")
+        model = joblib.load("model.pkl")  # your trained model
+        return model
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"Model load failed: {e}")
+        return None
+
+model = load_model()
+
+# ---- User input ----
+st.sidebar.header("Input Features")
+feature1 = st.sidebar.number_input("Feature 1", value=0.0)
+feature2 = st.sidebar.number_input("Feature 2", value=0.0)
+# Add more inputs as needed
+
+input_data = np.array([[feature1, feature2]])  # reshape for model
+
+# ---- Predict button ----
+if st.button("Predict"):
+    if model is not None:
+        prediction = model.predict(input_data)
+        st.success(f"Prediction: {prediction[0]}")
+    else:
+        st.warning("Model not loaded, cannot predict.")
