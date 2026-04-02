@@ -8,13 +8,11 @@ IMG_SIZE = 64
 
 st.title("Sign Language Detection")
 
-# Load model
 model = load_model('model/sign_language_model.h5')
 
 with open('model/class_names.txt') as f:
     class_names = f.read().splitlines()
 
-# Upload image
 uploaded_file = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
 
 if uploaded_file is not None:
