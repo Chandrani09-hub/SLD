@@ -3,32 +3,34 @@ import numpy as np
 import cv2
 from PIL import Image
 import joblib
+import os
 
-st.title("Sign Language Detection App")
-
-# Load the pickled model
-model = joblib.load("model/model.pkl")
+# Load model
+MODEL_PATH = os.path.join("model", "model.pkl")
+model = joblib.load(MODEL_PATH)
 
 # Load class names
-with open("model/class_names.txt") as f:
-    class_names = f.read().splitlines()
+CLASS_PATH = os.path.join("model", "class_names.txt")
+with open(CLASS_PATH, "r") as f:
+    class_names = [line.strip() for line in f.readlines()]
 
-uploaded_file = st.file_uploader("Upload a sign language image", type=["jpg", "png", "jpeg"])
+st.title("Sign Language Detection")
+st.write("Upload an image of a hand gesture, and the model will predict the sign.")
+
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    # Convert to OpenCV format
-    image = Image.open(uploaded_file)
-    img_array = np.array(image)
-
+    # Read image
+    image = Image.open(uploaded_file).convert("RGB")
     st.image(image, caption="Uploaded Image", use_column_width=True)
 
-    # Preprocess image for model
-    img_resized = cv2.resize(img_array, (64, 64))
-    img_normalized = img_resized / 255.0
-    img_input = np.expand_dims(img_normalized, axis=0)
+    # Convert to array and preprocess
+    img_array = np.array(image)
+    img_resized = cv2.resize(img_array, (64, 64))  # Assuming your model was trained on 64x64
+    img_input = img_resized.flatten().reshape(1, -1)  # Flatten for scikit-learn model
 
-    # Predict
-    prediction_index = model.predict(img_input)[0]
-    predicted_label = class_names[prediction_index]
+    # Prediction
+    prediction = model.predict(img_input)
+    predicted_class = class_names[prediction[0]]
 
-    st.write(f"Prediction: **{predicted_label}**")
+    st.success(f"Predicted Sign: {predicted_class}")
