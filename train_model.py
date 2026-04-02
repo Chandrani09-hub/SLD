@@ -6,7 +6,7 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 
-DATADATA_DIR = 'data/asl_alphabet_train'
+DATA_DIR = 'data/asl_alphabet_train'
 IMG_SIZE = 64
 
 def load_data():
@@ -15,11 +15,18 @@ def load_data():
 
     for idx, cls in enumerate(classes):
         class_dir = os.path.join(DATA_DIR, cls)
-        for img_name in os.listdir(class_dir)[:500]: 
+
+        # skip non-folder files (important safety)
+        if not os.path.isdir(class_dir):
+            continue
+
+        for img_name in os.listdir(class_dir)[:500]:
             img_path = os.path.join(class_dir, img_name)
             img = cv2.imread(img_path)
+
             if img is None:
                 continue
+
             img = cv2.resize(img, (IMG_SIZE, IMG_SIZE))
             images.append(img)
             labels.append(idx)
@@ -29,7 +36,7 @@ def load_data():
 print("Loading data...")
 X, y, class_names = load_data()
 
-X = X / 255.0  
+X = X / 255.0
 y = to_categorical(y)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
@@ -52,6 +59,7 @@ model.fit(X_train, y_train, epochs=5, validation_data=(X_test, y_test))
 
 print("Saving model...")
 os.makedirs('model', exist_ok=True)
+
 model.save('model/sign_language_model.h5')
 
 with open('model/class_names.txt', 'w') as f:
