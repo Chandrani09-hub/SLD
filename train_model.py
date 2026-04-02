@@ -6,7 +6,7 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 
-DATA_DIR = 'C:/Users/HP/OneDrive/Desktop/sign-language-detection/sign-language-detection/data/asl_alphabet_train' 
+DATADATA_DIR = 'data/asl_alphabet_train'
 IMG_SIZE = 64
 
 def load_data():
