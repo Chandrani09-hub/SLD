@@ -25,6 +25,7 @@ pyarrow>=6.0
 pympler<2,>=0.9
 python-dateutil<3,>=2.7.3
 dill
+mediapipe
 
 
 # Build tools
