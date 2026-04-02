@@ -1,36 +1,42 @@
 import streamlit as st
-import numpy as np
-import cv2
-from PIL import Image
-import joblib
+import pickle
 import os
+import numpy as np
+import pandas as pd
 
-# Load model
-MODEL_PATH = os.path.join("model", "model.pkl")
-model = joblib.load(MODEL_PATH)
+# -------------------------
+# Load your pickle model
+# -------------------------
+MODEL_PATH = "model.pkl"  # make sure your model file is in the repo root
 
-# Load class names
-CLASS_PATH = os.path.join("model", "class_names.txt")
-with open(CLASS_PATH, "r") as f:
-    class_names = [line.strip() for line in f.readlines()]
+if os.path.exists(MODEL_PATH):
+    with open(MODEL_PATH, "rb") as f:
+        model = pickle.load(f)
+    st.success("Model loaded successfully ✅")
+else:
+    st.error(f"Model file not found at {MODEL_PATH} ❌")
+    st.stop()  # Stop execution if model is missing
 
-st.title("Sign Language Detection")
-st.write("Upload an image of a hand gesture, and the model will predict the sign.")
+# -------------------------
+# Example prediction
+# -------------------------
+def predict(input_data):
+    # Make sure input_data is in the same format your model expects
+    input_array = np.array([input_data])
+    prediction = model.predict(input_array)
+    return prediction
 
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+# -------------------------
+# Streamlit UI
+# -------------------------
+st.title("My ML App")
+user_input = st.text_input("Enter input values separated by commas", "0,0,0")
 
-if uploaded_file is not None:
-    # Read image
-    image = Image.open(uploaded_file).convert("RGB")
-    st.image(image, caption="Uploaded Image", use_column_width=True)
-
-    # Convert to array and preprocess
-    img_array = np.array(image)
-    img_resized = cv2.resize(img_array, (64, 64))  # Assuming your model was trained on 64x64
-    img_input = img_resized.flatten().reshape(1, -1)  # Flatten for scikit-learn model
-
-    # Prediction
-    prediction = model.predict(img_input)
-    predicted_class = class_names[prediction[0]]
-
-    st.success(f"Predicted Sign: {predicted_class}")
+if st.button("Predict"):
+    try:
+        # Convert input string to list of floats
+        input_list = [float(x.strip()) for x in user_input.split(",")]
+        result = predict(input_list)
+        st.write(f"Prediction: {result}")
+    except Exception as e:
+        st.error(f"Error: {e}")
