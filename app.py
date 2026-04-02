@@ -1,36 +1,52 @@
 import streamlit as st
-import pandas as pd
 import numpy as np
 import joblib
-from sklearn.preprocessing import StandardScaler
+import mediapipe as mp
+from PIL import Image
 
-# ---- App title ----
-st.title("My ML Model Deployment App")
+st.set_page_config(page_title="Sign Language Detection", page_icon="🤟")
+st.title("🤟 Sign Language Detection App")
+st.write("Upload a hand sign image and the app will detect the letter!")
 
-# ---- Load model safely ----
 @st.cache_resource
 def load_model():
-    try:
-        model = joblib.load("model.pkl")  # your trained model
-        return model
-    except Exception as e:
-        st.error(f"Model load failed: {e}")
-        return None
+    model = joblib.load("model/model.pkl")
+    with open("model/class_names.txt") as f:
+        class_names = f.read().splitlines()
+    return model, class_names
 
-model = load_model()
+model, class_names = load_model()
 
-# ---- User input ----
-st.sidebar.header("Input Features")
-feature1 = st.sidebar.number_input("Feature 1", value=0.0)
-feature2 = st.sidebar.number_input("Feature 2", value=0.0)
-# Add more inputs as needed
+mp_hands = mp.solutions.hands
 
-input_data = np.array([[feature1, feature2]])  # reshape for model
+def extract_landmarks(image_rgb):
+    with mp_hands.Hands(static_image_mode=True, max_num_hands=1, min_detection_confidence=0.5) as hands:
+        results = hands.process(image_rgb)
+        if results.multi_hand_landmarks:
+            data = []
+            for lm in results.multi_hand_landmarks[0].landmark:
+                data.append(lm.x)
+                data.append(lm.y)
+            return np.array(data)
+    return None
 
-# ---- Predict button ----
-if st.button("Predict"):
-    if model is not None:
-        prediction = model.predict(input_data)
-        st.success(f"Prediction: {prediction[0]}")
+uploaded_file = st.file_uploader("Upload a hand sign image", type=["jpg", "png", "jpeg"])
+
+if uploaded_file is not None:
+    image = Image.open(uploaded_file).convert("RGB")
+    img_array = np.array(image)
+    st.image(image, caption="Uploaded Image", use_column_width=True)
+
+    with st.spinner("Detecting hand sign..."):
+        features = extract_landmarks(img_array)
+
+    if features is not None:
+        features = features.reshape(1, -1)
+        try:
+            pred_index = model.predict(features)[0]
+            label = class_names[pred_index] if isinstance(pred_index, int) else pred_index
+            st.success(f"### Detected Sign: **{label}**")
+        except Exception as e:
+            st.error(f"Prediction error: {e}")
     else:
-        st.warning("Model not loaded, cannot predict.")
+        st.warning("⚠️ No hand detected. Please try a clearer image.")
