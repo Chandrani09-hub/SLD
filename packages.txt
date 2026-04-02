@@ -1,2 +1,1 @@
-# Minimal system packages for OpenCV headless
 libgl1
