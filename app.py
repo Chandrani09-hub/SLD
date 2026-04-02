@@ -7,18 +7,29 @@ import os
 st.title("Sign Language Detection App")
 
 # Load model
-model_path = "model/model.pkl"
-if os.path.exists(model_path):
-    model = joblib.load(model_path)
-    st.success("Model loaded successfully!")
+model_path = os.path.join("model", "model.pkl")
+if not os.path.exists(model_path):
+    st.error("Model file not found at 'model/model.pkl'. Please check path.")
 else:
-    st.warning("Model file not found.")
+    model = joblib.load(model_path)
 
-# Upload image
+# Load class names
+class_names_path = os.path.join("model", "class_names.txt")
+if not os.path.exists(class_names_path):
+    st.error("Class names file not found at 'model/class_names.txt'.")
+else:
+    with open(class_names_path) as f:
+        class_names = f.read().splitlines()
+
+# File uploader
 uploaded_file = st.file_uploader("Upload a sign language image", type=["png", "jpg", "jpeg"])
 if uploaded_file is not None:
-    img = Image.open(uploaded_file)
-    st.image(img, caption="Uploaded Image", use_column_width=True)
-    # Example: convert to numpy array
-    img_array = np.array(img)
-    st.write("Image shape:", img_array.shape)
+    image = Image.open(uploaded_file)
+    st.image(image, caption="Uploaded Image", use_column_width=True)
+
+    # Convert image to array for prediction
+    img_array = np.array(image.resize((64, 64)))  # resize to your model input
+    img_array = img_array.reshape(1, 64, 64, 3)  # adapt shape for model
+    prediction = model.predict(img_array)
+    predicted_class = class_names[np.argmax(prediction)]
+    st.success(f"Predicted Sign: {predicted_class}")
